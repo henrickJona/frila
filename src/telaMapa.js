@@ -47,7 +47,11 @@ constructor(props) {
 	  
      };
     }
-
+    LogOut = async()=>{
+      await AsyncStorage.removeItem('@CodeFrila:token')
+      await AsyncStorage.removeItem('@CodeFrila:usuario')
+      this.props.navigate.navigation('Inicio');
+    }
     botaoAdicionar = () => {
   
       if (!this.state.menu1 && this.state.menuRodape) {

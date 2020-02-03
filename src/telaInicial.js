@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, TextInput, Button, FlatList, ScrollView, TouchableOpacity, Dimensions, Keyboard, TouchableWithoutFeedback, TouchableHighlight, Image } from 'react-native';
+import {AsyncStorage, StyleSheet, Text, View, TextInput, Button, FlatList, ScrollView, TouchableOpacity, Dimensions, Keyboard, TouchableWithoutFeedback, TouchableHighlight, Image } from 'react-native';
 import {Container,Header,Left,Right,Radio } from 'native-base';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
@@ -17,7 +17,7 @@ class telaInicial extends React.Component {
             botaoContratante:true,
             botaoAutonomo:true,
             loading: false,
-           id :''
+           id :'',
           };
           
       }
@@ -36,23 +36,35 @@ class telaInicial extends React.Component {
               foto_perfil_autonomo:foto,
               email_autonomo: email
             })
-            if(resps.data[0].telefone_autonomo == 'teste'){
+            const {autonomo, token} = resps.data
+         
+            console.log(autonomo,token)
+            if(resps.data.autonomo[0].telefone_autonomo == 'teste'){
+              
               this.setState({
                 loading: false
               });
               this.setState({
                 id: resps.data[0].id
               });
+              
               this.props.navigation.navigate('ScreenTwo',{
                 idd :this.state.id
               });
             }else{
+              
               this.setState({
                 loading: false
               });
-              this.props.navigation.navigate('ScreenThree')
+              
+              await AsyncStorage.multiSet([
+                ['@CodeFrila:token', token],
+                ['@CodeFrila:usuario',JSON.stringify(autonomo)],
+              ])
+              
+              this.props.navigation.navigate('SignedIn')
             }
-           console.log(resps.data[0].telefone_autonomo);     
+           //console.log(resps.data[0].telefone_autonomo);     
             }
 catch(error) {
   console.log(error);
@@ -163,7 +175,7 @@ catch(error) {
       }
       else if(this.state.botaoAutonomo){
         this.signInWithGoogleAsync();
-         this.navigate('verificacaoNumero')
+         
         //vai para a função de cadastrar autonomo
     }
       }

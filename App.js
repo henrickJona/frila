@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View,SafeAreaView,ScrollView,Image,TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View,SafeAreaView,ScrollView,Image,TouchableOpacity, AsyncStorage } from 'react-native';
 import {createStackNavigator} from 'react-navigation-stack';
 import {createSwitchNavigator} from 'react-navigation';
 import { createDrawerNavigator, DrawerItems} from 'react-navigation-drawer';
@@ -10,6 +10,17 @@ import telaMapa from './src/telaMapa';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import telaEditar from './src/telaEditar';
 import telaHistorico from './src/telaHistorico';
+import { createRootNavigator, Logado, NaoLogado } from './src/routes';
+
+
+componentWillM = async ()=>{
+  console.log('APProdou')
+  const token = await AsyncStorage.getItem('@CodeFrila:token');
+  const usuario = JSON.parse(await AsyncStorage.getItem('@CodeFrila:usuario'));
+  if(token && usuario)
+    this.setState(logado=true);
+  
+}
 const CustomDrawerComponent = (props)=>(
   <SafeAreaView style={{flex:1}}>
     <View style={{height:270, backgroundColor:'#0A2745',alignItems:"center", justifyContent:'center',paddingTop:60}}>
@@ -41,6 +52,54 @@ const CustomDrawerComponent = (props)=>(
     </View>
   </SafeAreaView>
 )
+
+export default class App extends React.Component {
+  state = {
+    signed: false,
+    signLoaded: false,
+  };
+
+  componentDidMount = async ()=>{
+    console.log('APProdou')
+    const token = await AsyncStorage.getItem('@CodeFrila:token');
+    const usuario = JSON.parse(await AsyncStorage.getItem('@CodeFrila:usuario'));
+    if(token && usuario)
+      this.setState({logado:true});
+    
+  }
+
+  render() {
+   
+    
+    const Layout = createRootNavigator(this.state.logado);
+    
+    
+    return <Layout />;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 const DrawerNavigator = createDrawerNavigator(
   {
     mapa: telaMapa,
@@ -64,7 +123,19 @@ const DrawerNavigator = createDrawerNavigator(
   },
   
 );
-const NavStack = createStackNavigator({
+
+const Logado = createStackNavigator({
+  PrimeiraTela: { 
+  screen: DrawerNavigator,
+  navigationOptions:{
+    headerShown:false
+  },
+  
+},
+  
+  
+});
+const NaoLogado = createStackNavigator({
   Inicio: { 
       screen: telaInicial,
       navigationOptions:{
@@ -79,13 +150,7 @@ const NavStack = createStackNavigator({
         headerTintColor:'white'
     },
     
-},ScreenThree: { 
-  screen: DrawerNavigator,
-  navigationOptions:{
-    headerShown:false
-  },
-  
-},
+}
   
   
 });
@@ -93,8 +158,8 @@ const NavStack = createStackNavigator({
 
 
 const MainNavigation = createSwitchNavigator({
-  HomeDrawer: DrawerNavigator,
-  AuthStack: NavStack,
+  HomeDrawer: this.state.logado ? Logado : NaoLogado,
+  
 })
 const appConatainer  = createAppContainer(MainNavigation)
-export default appConatainer
+export default appConatainer*/

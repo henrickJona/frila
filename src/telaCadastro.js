@@ -38,6 +38,11 @@ class telaCadastro extends React.Component {
           this.setState({
             loading: false
           });
+          const {usuario, token}= resp.data
+          await AsyncStorage.multiSet([
+            ['@CodeFrila:token', token],
+            ['@CodeFrila:usuario',JSON.stringify(usuario)],
+          ])
           this.props.navigation.navigate('ScreenThree')
         } 
       

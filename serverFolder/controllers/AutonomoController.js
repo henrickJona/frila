@@ -1,6 +1,11 @@
 const Autonomo = require('../models/Autonomo');
 const authConfig = require('../config/auth');
-
+const jwt = require('jsonwebtoken');
+function generateToken(params ={}){
+        return jwt.sign(params, authConfig.secret,{
+            expiresIn: 864000,
+        })
+}
 module.exports = {
     
     async getOne(req,res){
@@ -20,7 +25,8 @@ module.exports = {
         
         const autonomo = await Autonomo.findOrCreate({where :{email_autonomo:email_autonomo}, defaults:{nome_autonomo,sobrenome_autonomo,foto_perfil_autonomo,email_autonomo,
             telefone_autonomo:'teste',valor_ganho_autonomo:0.0,notificado_autonomo:true,avaliacao_autonomo:1}})
-       
+        if(autonomo.telefone_autonomo != 'teste')
+            return res.json({autonomo,token:generateToken({id:autonomo.id})});
         return res.json(autonomo);
         
     },
@@ -35,7 +41,7 @@ module.exports = {
             }
           });
           
-          return res.json(autonomo)
+          return res.send({autonomo,token:generateToken({id:autonomo.id})});
     },
     async getAll(req,res){
         
@@ -45,13 +51,4 @@ module.exports = {
         
         
     },
-    async Authenticate(req, res){
-        const {email} = req.body
-        const autonomo = await Auntonomo.findOne({email});
-        if(!autonomo){
-            return res.status(400).send({error: 'Usuário não Encontrado!'})
-        }
-    }
-    
-    
 }
