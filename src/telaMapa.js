@@ -1,12 +1,17 @@
 import React, { Component } from 'react';
-import { Alert, StyleSheet, Text, View, Button, FlatList, ScrollView, TouchableOpacity, Dimensions, Keyboard, TouchableWithoutFeedback, TouchableHighlight, Image, Modal } from 'react-native';
-import {Container,Header,Left,Right,Radio } from 'native-base';
+import { Picker,Alert, StyleSheet, Text, View, Button, FlatList, ScrollView, TouchableOpacity, Dimensions, Keyboard, TouchableWithoutFeedback, TouchableHighlight, Image, Modal, AsyncStorage } from 'react-native';
+import {Container,Header,Left,Right,Radio, CardItem } from 'native-base';
 import MapView ,{ MAP_TYPES, PROVIDER_DEFAULT,UrlTile, Marker, Polyline } from 'react-native-maps';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import * as Animatable from 'react-native-animatable';
 import axios from "axios"
 import {TextInput} from 'react-native-paper'
+import api from '../services/api'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
+import { Card } from "react-native-elements";
+import { round } from 'react-native-reanimated';
+
+
 const { width, height } = Dimensions.get('window');
 const ASPECT_RATIO = width / height;
 const LATITUDE = -0.0063376;
@@ -34,26 +39,158 @@ constructor(props) {
        descricao:'',
        valor:'',
        anexo:'',
-       
-       region: {
-         latitude: LATITUDE,
-         longitude: LONGITUDE,
-         latitudeDelta: LATITUDE_DELTA,
-         longitudeDelta: LONGITUDE_DELTA,
-	   },
+       localizacao:'atual',
+       x:null,
+       region:null,
+       escolha:false,
+       localizacaoMenu:false,
+       info:false,
+       data:[],
+       aux:false,
 	   
 	   route: [],
 	  
 	  
      };
     }
-    LogOut = async()=>{
-      await AsyncStorage.removeItem('@CodeFrila:token')
-      await AsyncStorage.removeItem('@CodeFrila:usuario')
-      this.props.navigate.navigation('Inicio');
-    }
-    botaoAdicionar = () => {
+    componentDidMount = async()=>{
+      navigator.geolocation.getCurrentPosition(
+        async ({ coords: { latitude, longitude } }) => {
+          
   
+          this.setState({
+           
+            region: {
+              latitude,
+              longitude,
+              latitudeDelta: 0.002,
+              longitudeDelta: LATITUDE_DELTA * ASPECT_RATIO
+            }
+          });
+        }, //sucesso
+        () => {}, //erro
+        {
+          timeout: 2000,
+          enableHighAccuracy: true,
+          maximumAge: 1000
+        }
+      );
+      navigator.geolocation.getCurrentPosition(position => {
+        this.setState({x:position.coords})
+      }
+      );
+      const opcao = await AsyncStorage.getItem('@CodeFrila:opcao');
+      if(opcao.localeCompare('1')){
+        console.log('contratante')
+      }else if(opcao === 1){
+        console.log('autonomo')
+      }
+    }
+    
+    acessarTodosAnuncios = async ()=>{
+      const usuario = JSON.parse(await AsyncStorage.getItem('@CodeFrila:usuario'))
+      try{
+        const response = await api.get(`http://172.16.53.97:3333/contratante/${usuario[0].id}/anuncio`)
+        console.log(response.data)
+        
+        this.setState({
+          data:response.data
+        })
+
+        
+      }catch(error){
+        console.log(error)
+      }
+    }
+    trataDetalhes = async(id)=>{
+      console.log('nnnanan')
+      this.setState({
+        menu1:false,
+        menu2:false,function () {
+          this.props.navigation.navigate('SegundaTela', id)
+        }
+      })
+      
+    }
+    adicionarAnuncio = async()=>{
+      if(this.state.titulo === '' || this.state.descricao === '' || this.state.valor ===''||  this.state.anexo === ''){
+        alert('Preencha todos os campos!!')
+      }else{
+        const titulo = this.state.titulo;
+      const descricao = this.state.descricao;
+      const valor = this.state.valor;
+      const anexo = this.state.anexo;
+      const usuario = JSON.parse(await AsyncStorage.getItem('@CodeFrila:usuario'))
+      if(this.state.localizacao == 'escolher'){
+        const locali = this.state.x
+        try{
+          const response = await api.post(`http://172.16.53.97:3333/contratante/${usuario[0].id}/anuncio`,
+           {titulo_anuncio : titulo,
+            descricao_anuncio: descricao,
+            valor_maximo_anuncio: valor,
+            anexo_anuncio: anexo}
+          )
+          try{
+            const responseLocal = await api.post(`http://172.16.53.97:3333/contratante/${usuario[0].id}/anuncio/${response.data.id}/localizacao`,{
+              latitude:locali.latitude,
+              longitude:locali.longitude
+            })
+    
+            console.log(responseLocal)
+            alert('Anúncio Adicionado!!')
+            this.setState({
+              titulo:'',
+              descricao:'',
+              valor:'',
+              anexo:'',
+              localizacao:'atual',
+              localizacaoMenu:false
+            })
+          }catch(error){
+            console.log(error)
+          }
+        }catch(error){
+          console.log(error, 'foi aqui')
+        }
+      }else{
+        const local = this.state.region
+        try{
+          const response = await api.post(`http://172.16.53.97:3333/contratante/${usuario[0].id}/anuncio`,
+           {titulo_anuncio : titulo,
+            descricao_anuncio: descricao,
+            valor_maximo_anuncio: valor,
+            anexo_anuncio: anexo}
+          )
+          try{
+            const responseLocal = await api.post(`http://172.16.53.97:3333/contratante/${usuario[0].id}/anuncio/${response.data.id}/localizacao`,{
+              latitude:local.latitude,
+              longitude:local.longitude
+            })
+    
+            console.log(responseLocal)
+            alert('Anúncio Adicionado!!')
+            this.setState({
+              titulo:'',
+              descricao:'',
+              valor:'',
+              anexo:'',
+              localizacao:'atual',
+              localizacaoMenu:false
+            })
+          }catch(error){
+            console.log(error)
+          }
+        }catch(error){
+          console.log(error, 'foi aqui')
+        }
+      }  
+      }
+      
+      
+    }
+
+    botaoAdicionar = () => { 
+      
       if (!this.state.menu1 && this.state.menuRodape) {
         this.setState( {menu1: true} );
         this.setState({ menuRodape: false });
@@ -64,7 +201,7 @@ constructor(props) {
       }
     };
     botaoIformacao = () => {
-
+      this.acessarTodosAnuncios();
       if (!this.state.menu2 && this.state.menuRodape) {
         this.setState({ menu2: true });
         this.setState({ menuRodape: false });
@@ -74,6 +211,96 @@ constructor(props) {
         
       }
     };
+    Mudanca= async(itemValue)=>{
+      
+      const itemvalue = itemValue
+      this.setState({localizacao:itemvalue}, () => { 
+        this.setEscolha() 
+      })
+      
+    }
+     time_ago = (time)=> {
+
+      switch (typeof time) {
+        case 'number':
+          break;
+        case 'string':
+          time = +new Date(time);
+          break;
+        case 'object':
+          if (time.constructor === Date) time = time.getTime();
+          break;
+        default:
+          time = +new Date();
+      }
+      var time_formats = [
+        [60, 'seconds', 1], // 60
+        [120, '1 minute ago', '1 minute from now'], // 60*2
+        [3600, 'minutes', 60], // 60*60, 60
+        [7200, '1 hour ago', '1 hour from now'], // 60*60*2
+        [86400, 'hours', 3600], // 60*60*24, 60*60
+        [172800, 'Yesterday', 'Tomorrow'], // 60*60*24*2
+        [604800, 'days', 86400], // 60*60*24*7, 60*60*24
+        [1209600, 'Last week', 'Next week'], // 60*60*24*7*4*2
+        [2419200, 'weeks', 604800], // 60*60*24*7*4, 60*60*24*7
+        [4838400, 'Last month', 'Next month'], // 60*60*24*7*4*2
+        [29030400, 'months', 2419200], // 60*60*24*7*4*12, 60*60*24*7*4
+        [58060800, 'Last year', 'Next year'], // 60*60*24*7*4*12*2
+        [2903040000, 'years', 29030400], // 60*60*24*7*4*12*100, 60*60*24*7*4*12
+        [5806080000, 'Last century', 'Next century'], // 60*60*24*7*4*12*100*2
+        [58060800000, 'centuries', 2903040000] // 60*60*24*7*4*12*100*20, 60*60*24*7*4*12*100
+      ];
+      var seconds = (+new Date() - time) / 1000,
+        token = 'ago',
+        list_choice = 1;
+    
+      if (seconds == 0) {
+        return 'Just now'
+      }
+      if (seconds < 0) {
+        seconds = Math.abs(seconds);
+        token = 'from now';
+        list_choice = 2;
+      }
+      var i = 0,
+        format;
+      while (format = time_formats[i++])
+        if (seconds < format[0]) {
+          if (typeof format[2] == 'string')
+            return format[list_choice];
+          else
+            return Math.floor(seconds / format[2]) + ' ' + format[1] + ' ' + token;
+        }
+      return time;
+    }
+
+    setEscolha= ()=>{
+      
+      if(this.state.localizacaoMenu){
+        //quando apertar finalizar ou quando apertar cancelar, falta implementar
+        this.setState({localizacaoMenu:false})
+      } 
+      else if(this.state.escolha){
+        this.setState({localizacaoMenu:true})
+        this.setState({escolha:false})
+        
+      }else if(!this.state.escolha && this.state.localizacao != 'atual' && !this.state.localizacaoMenu){
+        console.log(this.state.localizacao)
+        this.setState({escolha:true})
+      }
+     
+    }
+    
+    botaoInfo = () =>{
+      if(this.state.info){
+        this.setState({info:false})
+      }else{
+        this.setState({info:true})
+      }
+      
+    }
+    
+
     botaoFecharModal = () => {
 
       if (this.state.menu1 && this.state.titulo != '' || this.state.descricao != ''|| this.state.valor != ''|| this.state.anexo != '') {
@@ -87,7 +314,14 @@ constructor(props) {
               onPress: () => console.log('Cancel Pressed'),
               style: 'cancel',
             },
-            {text: 'OK', onPress: () => this.setState({menuRodape:true, menu1:false,menu2:false}) },
+            {text: 'OK', onPress: () => this.setState({menuRodape:true, menu1:false,menu2:false,  
+              titulo:'',
+              descricao:'',
+              valor:'',
+              anexo:'',
+              localizacao:'atual',
+              localizacaoMenu:false
+            }) },
           ],
           {cancelable: false},);
          } else {
@@ -102,7 +336,38 @@ render() {
   return (
     
      <View>
-     <MapView
+       {this.state.escolha?(
+       <View>
+        <MapView
+        region={this.state.region}
+        provider={null}
+        
+        rotateEnabled={false}
+        
+        style={styles.map}
+        showsUserLocation>
+          <Marker draggable
+
+              coordinate={this.state.x}
+              onDragEnd={(e) => this.setState({ x: e.nativeEvent.coordinate })}
+            />
+        </MapView>
+        <Animatable.View animation='bounce' style={{padding:30,alignItems:"center", backgroundColor:'rgba(0,0,0,0.2)',position: 'absolute',left:30,top:120,right:30 }}>
+        <Text style={{position:"absolute", textAlign:"center",  fontSize:20,color:'#3C3839'}}>
+          Segure e Arraste o Marcador para definir uma localização
+        </Text>
+        </Animatable.View>
+        <TouchableOpacity style={{borderRadius:15, backgroundColor:'#466494', height:40, marginTop:2, width:'35%', alignSelf:"center",position:'absolute', bottom:0,margin:50}}>
+          <Text style={{color:'white',textAlign:"center", fontSize:15, marginTop:7}} onPress={this.setEscolha}>
+            Aplicar
+          </Text>
+        </TouchableOpacity>
+      </View>
+      ):null}
+
+      {!this.state.escolha ?(
+        <View>
+      <MapView
        region={this.state.region}
        provider={null}
        
@@ -207,7 +472,7 @@ render() {
                   <KeyboardAwareScrollView 
         enableOnAndroid={true}>
                   <Animatable.View   animation={'fadeIn'} style={{backgroundColor:'#F6F6F6', padding:10}}>
-                    <TextInput label='Titulo' style={styles.entrada} theme={{ colors: { primary: "#4d6273" }}} value={this.state.titulo}
+                    <TextInput required label='Titulo' style={styles.entrada} theme={{ colors: { primary: "#4d6273" }}} value={this.state.titulo}
               onChangeText={titulo => this.setState({ titulo })}>
 
                     </TextInput>
@@ -223,10 +488,70 @@ render() {
               onChangeText={anexo => this.setState({ anexo })}>
 
                     </TextInput>
+                    <Text style={{fontSize:15, color:'#1A2127'}}>
+                      Informe uma Localização:
+                    </Text>
+                    <TouchableOpacity onPress={this.botaoInfo}>
+                      <Icon name='info-circle' color='#40AFE0' size={20} style={{textAlign:"left",alignSelf:'flex-end'}} />
+                    </TouchableOpacity>
+                    <Modal transparent={true} visible={this.state.info }   >
+                      <TouchableWithoutFeedback onPress={this.botaoInfo}>
+                    <Animatable.View style={{backgroundColor:'rgba(52, 52, 52, 0.8)', width:'100%', height:'100%', padding:5, flexDirection:'column'}}>
+                      <View style={{backgroundColor:'#F6F6F6', alignSelf:"center",justifyContent:"center", top:120,margin:20}}>
+                      <View style={{backgroundColor:'#4d6273', padding:0,margin:0}}>
+                      <Text style={{color:'white', fontSize:35, paddingLeft:10}}>
+                        Informação
+                      </Text>
+                      </View>
+                      <View style={{paddingTop:20}}>
+                      <Icon name='map' size={40} color='#C3D0D6' style={{alignSelf:"center", justifyContent:"center"}}/>
+                          <Text style={{fontSize:20, color:'#2E2D2D', textAlign:"center", paddingTop:20}}>
+                            Esta localização determina onde será exercido o trabalho
+                          </Text>
+                      </View>
+                      <View style={{paddingTop:20}}>
+                        <TouchableOpacity style={{borderWidth:1,borderColor:'#E1E1E1',height:55}} onPress={this.botaoInfo}>
+                          <Text style={{textAlign:"center",fontSize:20, alignSelf:"center",justifyContent:"center",paddingTop:10}}>
+                            Entendi
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                      </View>
+                      </Animatable.View>
+                      </TouchableWithoutFeedback>
+                    </Modal>
+                    {!this.state.localizacaoMenu?(
+                    <Picker
+                    
+                      selectedValue={this.state.localizacao}
+                      
+                      style={{height: 50, width: 200}}
+                      onValueChange={(itemValue, itemIndex) =>
+                        this.Mudanca(itemValue)
+                        
+                      }>
+                      
+                       
+                      <Picker.Item label="Localização Atual" value="atual" />
+                      <Picker.Item label="Escolher no Mapa" value="escolher"/>
+                    </Picker>
+                    ):null}
+                    {this.state.localizacaoMenu?(
+                      <View style={{flexDirection:'row', justifyContent:'space-around'}}>
+                  <Text style={{fontSize:15}}>
+                        Localização Informada
+                              <Icon name='check' color='#99B78F' size={20}/>
+                      </Text>
+                      <Text style={{color:'#40AFE0'}} onPress={this.setEscolha}>
+                      Editar
+                    </Text>
+                      </View>
+                      
+                    ):null}
                   </Animatable.View>
                   
                   <View style={{flexDirection:"row", justifyContent:'space-around', width:'100%', marginBottom:20}}>
-                  <TouchableOpacity style={{borderRadius:15, backgroundColor:'#466494', height:40, marginTop:2, width:'35%', alignSelf:"center"}}>
+                  <TouchableOpacity style={{borderRadius:15, backgroundColor:'#466494', height:40, marginTop:2, width:'35%', alignSelf:"center"}} onPress={this.adicionarAnuncio}>
                           
              
                           <Text style={{color:'white',textAlign:"center", fontSize:15, marginTop:7}}>
@@ -248,22 +573,62 @@ render() {
               {this.state.menu2 ? (
                   <KeyboardAwareScrollView 
         enableOnAndroid={true}>
-                  <Animatable.View  animation={'fadeIn'} style={{backgroundColor:'#F6F6F6', padding:10}}>
-                    <TextInput label='Titulo' style={styles.entrada} theme={{ colors: { primary: "#4d6273" }}}>
+                  <Animatable.View  animation={'fadeIn'} style={{backgroundColor:'#F6F6F6', padding:0}}>
+                    <FlatList
+                    style={{height:450}}
+                    data={this.state.data? this.state.data: 'test'}
+                    renderItem={({ item: rowData }) => {
+                      return (
+                        <View style={{paddingLeft:10, paddingRight:10, paddingTop:5,paddingBottom:5}}>
+<TouchableOpacity onPress={() => console.log(rowData.id)} style={{height:70, width:"100%", padding:10, borderWidth:1, borderColor:'#E0E0E0', }}>
+                              
+                            <Text style={{fontSize:18}}>
+                              
+                              {rowData.titulo_anuncio}
+                              
+                            </Text>
+                            <Text>
+                            {this.time_ago(new Date(Date.now() - new Date(rowData.createdAt)))}
+                              
+                            </Text>
+                            <Icon name="arrow-right" color='#4d6273' size={20} style={{alignSelf:'flex-end'}} />
+                            </TouchableOpacity>
+                        </View>
+                            
+                           /* <Card
+                              
+                              title={rowData.titulo_anuncio}
+                            titleStyle={{alignSelf:'flex-start'}}
+                            
+                            onPress={console.log('terte')}
+                            containerStyle={{   borderRadius:6,height:100, marginTop:10 }}>
+                             
+                              <Text>
+                              {rowData.title}
+                              
+                            </Text>
+                           
+                <Icon name="arrow-right" />
+                              
+                              
+              
+                             
+                              
+                            
+                              </Card> */
+                            
+                            
+                        
+                         
+                      );
+                    }}
+                    keyExtractor={(item, index) => item}
+                    />
 
-                    </TextInput>
-                    <TextInput label='Descrição'  multiline={true} style={styles.entrada, {height:120,marginBottom: 10, marginTop:0}} theme={{ colors: { primary: "#4d6273" }}}> 
-
-                    </TextInput>
-                    <TextInput label='Até quanto você pagaria?' style={styles.entrada} theme={{ colors: { primary: "#4d6273" }}}>
-
-                    </TextInput>
-                    <TextInput label='Anexo'  style={styles.entrada} theme={{ colors: { primary: "#4d6273" }}}>
-
-                    </TextInput>
+                    
                   </Animatable.View>
                   
-                  <View style={{flexDirection:"row", justifyContent:'space-around', width:'100%', marginBottom:20}}>
+                  <View style={{flexDirection:"row", justifyContent:'space-around', width:'100%', marginBottom:20, marginTop:10}}>
                   
                     <TouchableOpacity style={{borderRadius:15, backgroundColor:'#FAFBFB', height:40, marginTop:2, width:'35%', alignSelf:"center", borderWidth:1, borderColor:'#C9D0DB'}}>
                       
@@ -282,7 +647,8 @@ render() {
           
           </Animatable.View>
           
-        </Modal>
+        </Modal> 
+        </View>):null}
      </View>
    
    );

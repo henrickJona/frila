@@ -26,7 +26,7 @@ module.exports = {
       
         },
         anexo_anuncio: { 
-          type: Sequelize.DECIMAL(10,2),
+          type: Sequelize.STRING,
           allowNull:true,
       
         },

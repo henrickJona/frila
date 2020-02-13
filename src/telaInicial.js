@@ -24,53 +24,105 @@ class telaInicial extends React.Component {
       
       
       teste = async(nome, sobrenome, email, foto)=>{
-        this.setState({
-          loading: true
-        });
-    
-        try{
+        const opcao = await AsyncStorage.getItem('@CodeFrila:opcao');
+        console.log(opcao);
+        if(opcao === '0'){
+          console.log(opcao)
+          this.setState({
+            loading: true
+          });
+      
+          try{
+            
+              const resps = await axios.post('http://172.16.53.97:3333/contratante/',{
+                nome_contratante: nome,
+                sobre_nome_contratante: sobrenome,
+                foto_perfil_contratante:foto,
+                email_contratante: email
+              })
+              const {contratante, token} = resps.data
+           
+              console.log(contratante,token)
+              if(resps.data.contratante[0].telefone_contratante == 'teste'){
+                
+                this.setState({
+                  loading: false
+                });
+                console.log('chegou')
+                this.setState({
+                  id: resps.data.contratante[0].id
+                });
+                
+                this.props.navigation.navigate('ScreenTwo',{
+                  idd :this.state.id
+                });
+              }else{
+                
+                this.setState({
+                  loading: false
+                });
+                
+                await AsyncStorage.multiSet([
+                  ['@CodeFrila:token', token],
+                  ['@CodeFrila:usuario',JSON.stringify(contratante)],
+                ])
+                
+                this.props.navigation.navigate('PrimeiraTela')
+              }
+                 
+              }
+          catch(error) {
+            console.log(error);
+          };
+        }else if(opcao === '1'){
+          this.setState({
+            loading: true
+          });
+      
+          try{
+            
+              const resps = await axios.post('http://172.16.53.97:3333/autonomo/',{
+                nome_autonomo: nome,
+                sobrenome_autonomo: sobrenome,
+                foto_perfil_autonomo:foto,
+                email_autonomo: email
+              })
+              const {autonomo, token} = resps.data
+           
+              console.log(autonomo,token)
+              if(resps.data.autonomo[0].telefone_autonomo == 'teste'){
+                
+                this.setState({
+                  loading: false
+                });
+                this.setState({
+                  id: resps.data.autonomo[0].id
+                });
+                
+                this.props.navigation.navigate('ScreenTwo',{
+                  idd :this.state.id
+                });
+              }else{
+                
+                this.setState({
+                  loading: false
+                });
+                
+                await AsyncStorage.multiSet([
+                  ['@CodeFrila:token', token],
+                  ['@CodeFrila:usuario',JSON.stringify(autonomo)],
+                ])
+                
+                this.props.navigation.navigate('PrimeiraTela')
+              }
+                 
+              }
+          catch(error) {
+            console.log(error);
+          };
           
-            const resps = await axios.post('http://172.16.53.97:3333/autonomo/',{
-              nome_autonomo: nome,
-              sobrenome_autonomo: sobrenome,
-              foto_perfil_autonomo:foto,
-              email_autonomo: email
-            })
-            const {autonomo, token} = resps.data
-         
-            console.log(autonomo,token)
-            if(resps.data.autonomo[0].telefone_autonomo == 'teste'){
-              
-              this.setState({
-                loading: false
-              });
-              this.setState({
-                id: resps.data[0].id
-              });
-              
-              this.props.navigation.navigate('ScreenTwo',{
-                idd :this.state.id
-              });
-            }else{
-              
-              this.setState({
-                loading: false
-              });
-              
-              await AsyncStorage.multiSet([
-                ['@CodeFrila:token', token],
-                ['@CodeFrila:usuario',JSON.stringify(autonomo)],
-              ])
-              
-              this.props.navigation.navigate('SignedIn')
-            }
-           //console.log(resps.data[0].telefone_autonomo);     
-            }
-catch(error) {
-  console.log(error);
-};
-        //alert();
-        //console.log((await response.json()).name);
+          
+        }
         
       }
       logIn = async ()=> {
@@ -110,6 +162,7 @@ catch(error) {
         }
       }
       signInWithGoogleAsync = async () =>{
+        
         try {
           const result = await Google.logInAsync({
             androidClientId: '229284470930-8di619af432vt8s9aa1a9p332f3k41av.apps.googleusercontent.com',
@@ -153,27 +206,51 @@ catch(error) {
           this.setState({ botaoAutonomo: true });
         }
       };
-      checkF=()=>{
+      checkF = async ()=>{
+        
         if(this.state.botaoAutonomo && this.state.botaoContratante){
             alert('Selecione uma das opções primeiro!!');
         }else if(this.state.botaoAutonomo){
+          try{
+            await AsyncStorage.setItem('@CodeFrila:opcao',1)
+          }catch(error){
+            console.log(error)
+          }
             this.logIn();
+            
             //vai para a função de cadastrar autonomo
         }else if(this.state.botaoContratante){
+          try{
+            await AsyncStorage.setItem('@CodeFrila:opcao',0)
+          }catch(error){
+            console.log(error)
+          }
           this.logIn();
           //vai para a função de cadastrar contratante
       }
       }
-      checkG=()=>{
+      checkG = async()=>{
+        
         if(this.state.botaoAutonomo && this.state.botaoContratante){
             alert('Selecione uma das opções primeiro!!');
         }
         else if(this.state.botaoContratante){
-          this.signInWithGoogleAsync();
+          try{
+            await AsyncStorage.setItem('@CodeFrila:opcao','0')
+          }catch(error){
+            console.log(error)
+          }
+          
+        this.signInWithGoogleAsync();
           //vai para a função de cadastrar contratante
            
       }
       else if(this.state.botaoAutonomo){
+        try{
+          await AsyncStorage.setItem('@CodeFrila:opcao','1')
+        }catch(error){
+          console.log(error)
+        }
         this.signInWithGoogleAsync();
          
         //vai para a função de cadastrar autonomo

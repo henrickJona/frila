@@ -12,8 +12,6 @@ const TermoCompromisso = require('../models/TermoCompromisso');
 const HistoricoAutonomo = require('../models/HistoricoAutonomo');
 const HistoricoContratante = require('../models/HistoricoContratante');
 
-
-
 Autonomo.init(connection);
 Contratante.init(connection);
 Anuncio.init(connection);

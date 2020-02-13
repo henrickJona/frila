@@ -4,8 +4,8 @@ class Contratante extends Model{
     static init(sequelize){
         super.init({
             nome_contratante: DataTypes.STRING,
-            sobrenomo_contratante: DataTypes.STRING,
-            foto_perfil_autonomo: DataTypes.STRING,
+            sobre_nome_contratante: DataTypes.STRING,
+            foto_perfil_contratante: DataTypes.STRING,
             email_contratante: DataTypes.STRING,
             avaliacao_contratante: DataTypes.STRING,
             telefone_contratante: DataTypes.STRING,

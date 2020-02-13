@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { StyleSheet, Text, View, Button, FlatList, ScrollView, TouchableOpacity, Dimensions, Keyboard, TouchableWithoutFeedback, TouchableHighlight, Image, Alert } from 'react-native';
+import { StyleSheet, Text, View, Button, FlatList, ScrollView, TouchableOpacity, Dimensions, Keyboard, TouchableWithoutFeedback, TouchableHighlight, Image, Alert, AsyncStorage } from 'react-native';
 import {Container,Header,Left,Right,Radio } from 'native-base';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
@@ -28,32 +28,69 @@ class telaCadastro extends React.Component {
   }
 
   send = async () =>{
-     this.setState({
-          loading: true
-        });
-    if(this.validaFone('(96) 99158-3485')){
-      try{
-        const resp = await axios.put(`http://172.16.53.97:3333/autonomo/${this.state.id}`,
-          {telefone_autonomo: this.state.telefone},)
-          this.setState({
-            loading: false
-          });
-          const {usuario, token}= resp.data
-          await AsyncStorage.multiSet([
-            ['@CodeFrila:token', token],
-            ['@CodeFrila:usuario',JSON.stringify(usuario)],
-          ])
-          this.props.navigation.navigate('ScreenThree')
-        } 
-      
-          catch(error) {
-            console.log(error);
+const opcao = await AsyncStorage.getItem('@CodeFrila:opcao');
 
-          };
-    }else{
-      alert('Insira um Número Válido');
+    if(opcao == 1){
+      this.setState({
+        loading: true
+      });
+      if(this.validaFone('(96) 99158-3485')){
+        try{
+          const resp = await axios.put(`http://172.16.53.97:3333/autonomo/${this.state.id}`,
+            {telefone_autonomo: this.state.telefone},)
+            this.setState({
+              loading: false
+            });
+            const {usuario, token}= resp.data
+            await AsyncStorage.multiSet([
+              ['@CodeFrila:token', token],
+              ['@CodeFrila:usuario',JSON.stringify(usuario)],
+            ])
+            this.props.navigation.navigate('PrimeiraTela')
+          } 
+        
+            catch(error) {
+              console.log(error);
+
+            };
+      }else{
+        alert('Insira um Número Válido');
+      }
+    }else if(opcao == 0){
+      this.setState({
+        loading: true
+      });
+      if(this.validaFone('(96) 99158-3485')){
+        try{
+          const resp = await axios.put(`http://172.16.53.97:3333/contratante/${this.state.id}`,
+            {telefone_contratante: this.state.telefone},)
+            this.setState({
+              loading: false
+            });
+            const {usuario, token}= resp.data
+            await AsyncStorage.multiSet([
+              ['@CodeFrila:token', token],
+              ['@CodeFrila:usuario',JSON.stringify(usuario)],
+            ])
+            this.props.navigation.navigate('PrimeiraTela')
+          } 
+        
+            catch(error) {
+              console.log(error);
+      
+            };
+      }else{
+        alert('Insira um Número Válido');
+      }
     }
+     
+
+
+    
+
   }
+
+ 
 
 
   render(){

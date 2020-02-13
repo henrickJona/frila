@@ -20,7 +20,7 @@ module.exports = {
         
     },
 
-    async storeByFacebookApi(req, res){
+    async storeRegister(req, res){
         const {nome_autonomo,sobrenome_autonomo, foto_perfil_autonomo, email_autonomo} = req.body;
         
         const autonomo = await Autonomo.findOrCreate({where :{email_autonomo:email_autonomo}, defaults:{nome_autonomo,sobrenome_autonomo,foto_perfil_autonomo,email_autonomo,
