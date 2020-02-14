@@ -14,7 +14,20 @@ import telaHistorico from './src/telaHistorico';
 import { createRootNavigator,} from './src/routes';
 import splash from './src/splashScreen'
 
+ShowUserInformation = async ()=>{
+ 
+  const token = await AsyncStorage.getItem('@CodeFrila:token')
+  const usuario = JSON.parse(await AsyncStorage.getItem('@CodeFrila:usuario'))
+  const opcao = await AsyncStorage.getItem('@CodeFrila:opcao');
+  const nome = usuario[0].nome_contratante
+  if(token  && opcao.localeCompare('1')){
+    console.log(nome)
+    return  nome
+  }else if(token && usuario && opcao.localeCompare('0')){
+    return usuario[0].nome_autonomo
+  }
 
+}
 logOut = async ()=>{
   await AsyncStorage.removeItem('@CodeFrila:token')
   await AsyncStorage.removeItem('@CodeFrila:usuario')
@@ -24,7 +37,7 @@ const CustomDrawerComponent = (props)=>(
     <View style={{height:270, backgroundColor:'#0A2745',alignItems:"center", justifyContent:'center',paddingTop:60}}>
       <Image source={require('./src/default.jpg')} style={{height:120,width:120,borderRadius:60}} />
       <Text style={{fontSize:20, paddingTop:20, color:'#F6F6F6'}}>
-       Nome do Usuário
+       {ShowUserInformation()}
       </Text>
       
       <TouchableOpacity>
@@ -84,9 +97,12 @@ const Logado = createStackNavigator({
   },SegundaTela: { 
     screen: anuncioDetalhes,
     navigationOptions:{
-      headerTransparent:true,
-        headerTintColor:'white'
-    },
+        headerTransparent:true,
+      headerShown:true,
+      title:'',
+      headerTintColor:'white'
+      
+},
     
   }
 });

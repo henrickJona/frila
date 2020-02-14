@@ -10,7 +10,7 @@ import api from '../services/api'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 import { Card } from "react-native-elements";
 import { round } from 'react-native-reanimated';
-
+import TimeAgo from 'react-native-timeago'
 
 const { width, height } = Dimensions.get('window');
 const ASPECT_RATIO = width / height;
@@ -18,7 +18,9 @@ const LATITUDE = -0.0063376;
 const LONGITUDE = -51.0848025;
 const LATITUDE_DELTA = 0.018;
 const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
-
+const  moment = require('moment');
+require('moment/locale/pt-br');
+moment.locale('pt-br')
  var coordinate=[];
 class telaMapa extends React.Component {
   static navigationOptions = {
@@ -106,10 +108,11 @@ constructor(props) {
       console.log('nnnanan')
       this.setState({
         menu1:false,
-        menu2:false,function () {
-          this.props.navigation.navigate('SegundaTela', id)
+        menu2:false,
+        menuRodape:true},() => {
+          this.props.navigation.navigate('SegundaTela', {id:id})
         }
-      })
+      )
       
     }
     adicionarAnuncio = async()=>{
@@ -219,61 +222,7 @@ constructor(props) {
       })
       
     }
-     time_ago = (time)=> {
-
-      switch (typeof time) {
-        case 'number':
-          break;
-        case 'string':
-          time = +new Date(time);
-          break;
-        case 'object':
-          if (time.constructor === Date) time = time.getTime();
-          break;
-        default:
-          time = +new Date();
-      }
-      var time_formats = [
-        [60, 'seconds', 1], // 60
-        [120, '1 minute ago', '1 minute from now'], // 60*2
-        [3600, 'minutes', 60], // 60*60, 60
-        [7200, '1 hour ago', '1 hour from now'], // 60*60*2
-        [86400, 'hours', 3600], // 60*60*24, 60*60
-        [172800, 'Yesterday', 'Tomorrow'], // 60*60*24*2
-        [604800, 'days', 86400], // 60*60*24*7, 60*60*24
-        [1209600, 'Last week', 'Next week'], // 60*60*24*7*4*2
-        [2419200, 'weeks', 604800], // 60*60*24*7*4, 60*60*24*7
-        [4838400, 'Last month', 'Next month'], // 60*60*24*7*4*2
-        [29030400, 'months', 2419200], // 60*60*24*7*4*12, 60*60*24*7*4
-        [58060800, 'Last year', 'Next year'], // 60*60*24*7*4*12*2
-        [2903040000, 'years', 29030400], // 60*60*24*7*4*12*100, 60*60*24*7*4*12
-        [5806080000, 'Last century', 'Next century'], // 60*60*24*7*4*12*100*2
-        [58060800000, 'centuries', 2903040000] // 60*60*24*7*4*12*100*20, 60*60*24*7*4*12*100
-      ];
-      var seconds = (+new Date() - time) / 1000,
-        token = 'ago',
-        list_choice = 1;
-    
-      if (seconds == 0) {
-        return 'Just now'
-      }
-      if (seconds < 0) {
-        seconds = Math.abs(seconds);
-        token = 'from now';
-        list_choice = 2;
-      }
-      var i = 0,
-        format;
-      while (format = time_formats[i++])
-        if (seconds < format[0]) {
-          if (typeof format[2] == 'string')
-            return format[list_choice];
-          else
-            return Math.floor(seconds / format[2]) + ' ' + format[1] + ' ' + token;
-        }
-      return time;
-    }
-
+     
     setEscolha= ()=>{
       
       if(this.state.localizacaoMenu){
@@ -504,7 +453,7 @@ render() {
                       </Text>
                       </View>
                       <View style={{paddingTop:20}}>
-                      <Icon name='map' size={40} color='#C3D0D6' style={{alignSelf:"center", justifyContent:"center"}}/>
+                      <Icon name='map' size={40} color='#68869e' style={{alignSelf:"center", justifyContent:"center"}}/>
                           <Text style={{fontSize:20, color:'#2E2D2D', textAlign:"center", paddingTop:20}}>
                             Esta localização determina onde será exercido o trabalho
                           </Text>
@@ -579,19 +528,21 @@ render() {
                     data={this.state.data? this.state.data: 'test'}
                     renderItem={({ item: rowData }) => {
                       return (
-                        <View style={{paddingLeft:10, paddingRight:10, paddingTop:5,paddingBottom:5}}>
-<TouchableOpacity onPress={() => console.log(rowData.id)} style={{height:70, width:"100%", padding:10, borderWidth:1, borderColor:'#E0E0E0', }}>
+                        <View style={{paddingLeft:10, paddingRight:10, paddingTop:5,paddingBottom:5, }}>
+<TouchableOpacity onPress={() => this.trataDetalhes(rowData.id)} style={{height:70, width:"100%", padding:10, borderWidth:1, borderColor:'#E0E0E0', flexDirection:"row", justifyContent:'space-between'}}>
                               
+                            
+                            <View>
                             <Text style={{fontSize:18}}>
                               
                               {rowData.titulo_anuncio}
                               
                             </Text>
-                            <Text>
-                            {this.time_ago(new Date(Date.now() - new Date(rowData.createdAt)))}
-                              
-                            </Text>
+                            <TimeAgo style={{color:'#717c85'}} time={rowData.createdAt} />
+                            </View>
+                            
                             <Icon name="arrow-right" color='#4d6273' size={20} style={{alignSelf:'flex-end'}} />
+                            
                             </TouchableOpacity>
                         </View>
                             
